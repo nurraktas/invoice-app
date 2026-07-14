@@ -122,11 +122,11 @@ async function buildInvoicePdf({
   page.drawText(invoiceNumber, { x: 50, y, size: 10, font, color: rgb(0.4, 0.4, 0.4) })
 
   y -= 40
-  page.drawText(`Müşteri: ${toPdfSafe(clientName)}`, { x: 50, y, size: 12, font })
+  page.drawText(toPdfSafe(`Musteri: ${clientName}`), { x: 50, y, size: 12, font })
 
   y -= 40
   // Tablo başlığı
-  page.drawText('Açıklama', { x: 50, y, size: 10, font: boldFont })
+  page.drawText('Aciklama', { x: 50, y, size: 10, font: boldFont })
   page.drawText('Adet', { x: 330, y, size: 10, font: boldFont })
   page.drawText('Birim Fiyat', { x: 400, y, size: 10, font: boldFont })
   page.drawText('Tutar', { x: 500, y, size: 10, font: boldFont })
