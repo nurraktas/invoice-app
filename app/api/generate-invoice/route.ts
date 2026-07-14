@@ -3,8 +3,6 @@ import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
 import { Resend } from 'resend'
 import { createAdminClient } from '@/lib/supabase-admin'
 
-
-
 type InvoiceItem = {
   description: string
   quantity: number
@@ -53,7 +51,7 @@ export async function POST(req: NextRequest) {
     })
 
     // 4) E-posta ile gönder
-    await resend.emails.send({
+    const emailResult = await resend.emails.send({
       from: process.env.INVOICE_FROM_EMAIL!,
       to: clientEmail,
       subject: `Fatura ${invoiceNumber}`,
@@ -65,6 +63,14 @@ export async function POST(req: NextRequest) {
         },
       ],
     })
+
+    if (emailResult.error) {
+      console.error('Resend hatası:', emailResult.error)
+      return NextResponse.json(
+        { error: `E-posta gönderilemedi: ${emailResult.error.message}` },
+        { status: 500 }
+      )
+    }
 
     // 5) Veritabanına kaydet (geçmiş faturalar için)
     await supabaseAdmin.from('invoices').insert({
@@ -84,19 +90,6 @@ export async function POST(req: NextRequest) {
   }
 }
 
-const TURKISH_TO_PDF_SAFE: Record<string, string> = {
-  ş: 's',
-  Ş: 'S',
-  ğ: 'g',
-  Ğ: 'G',
-  ı: 'i',
-  İ: 'I',
-}
-
-function toPdfSafe(text: string): string {
-  return text.replace(/[şŞğĞıİ]/g, (ch) => TURKISH_TO_PDF_SAFE[ch] ?? ch)
-}
-
 async function buildInvoicePdf({
   invoiceNumber,
   clientName,
@@ -110,6 +103,18 @@ async function buildInvoicePdf({
   notes: string
   total: number
 }) {
+  // pdf-lib'in standart yazı tipleri "ş, ğ, ı, İ" gibi Türkçe'ye özgü
+  // harfleri çizemiyor (WinAnsi karakter setinde yoklar). PDF'e yazmadan
+  // önce bu harfleri Latin karşılıklarına çeviriyoruz.
+  const toPdfSafe = (text: string) =>
+    text
+      .replace(/ş/g, 's')
+      .replace(/Ş/g, 'S')
+      .replace(/ğ/g, 'g')
+      .replace(/Ğ/g, 'G')
+      .replace(/ı/g, 'i')
+      .replace(/İ/g, 'I')
+
   const pdfDoc = await PDFDocument.create()
   const page = pdfDoc.addPage([595, 842]) // A4
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica)
