@@ -84,6 +84,19 @@ export async function POST(req: NextRequest) {
   }
 }
 
+const TURKISH_TO_PDF_SAFE: Record<string, string> = {
+  ş: 's',
+  Ş: 'S',
+  ğ: 'g',
+  Ğ: 'G',
+  ı: 'i',
+  İ: 'I',
+}
+
+function toPdfSafe(text: string): string {
+  return text.replace(/[şŞğĞıİ]/g, (ch) => TURKISH_TO_PDF_SAFE[ch] ?? ch)
+}
+
 async function buildInvoicePdf({
   invoiceNumber,
   clientName,
@@ -109,7 +122,7 @@ async function buildInvoicePdf({
   page.drawText(invoiceNumber, { x: 50, y, size: 10, font, color: rgb(0.4, 0.4, 0.4) })
 
   y -= 40
-  page.drawText(`Müşteri: ${clientName}`, { x: 50, y, size: 12, font })
+  page.drawText(`Müşteri: ${toPdfSafe(clientName)}`, { x: 50, y, size: 12, font })
 
   y -= 40
   // Tablo başlığı
@@ -122,7 +135,7 @@ async function buildInvoicePdf({
   y -= 20
 
   for (const item of items) {
-    page.drawText(item.description, { x: 50, y, size: 10, font })
+    page.drawText(toPdfSafe(item.description), { x: 50, y, size: 10, font })
     page.drawText(String(item.quantity), { x: 330, y, size: 10, font })
     page.drawText(item.unit_price.toFixed(2), { x: 400, y, size: 10, font })
     page.drawText((item.quantity * item.unit_price).toFixed(2), { x: 500, y, size: 10, font })
@@ -140,7 +153,7 @@ async function buildInvoicePdf({
     y -= 50
     page.drawText('Not:', { x: 50, y, size: 10, font: boldFont })
     y -= 15
-    page.drawText(notes, { x: 50, y, size: 10, font, maxWidth: 495 })
+    page.drawText(toPdfSafe(notes), { x: 50, y, size: 10, font, maxWidth: 495 })
   }
 
   return pdfDoc.save()
