@@ -47,7 +47,7 @@ Geliştirme sunucusunu başlatın:
 npm run dev
 ```
 
-[http://localhost:3000](http://localhost:3000) adresini açarak sonucu görebilirsiniz.
+https://invoice-app-khaki-theta.vercel.app adresini açarak sonucu görebilirsiniz.
 
 ## Proje yapısı
 
