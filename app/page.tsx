@@ -42,7 +42,10 @@ export default function Home() {
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
   
-    const { error } = await supabase.auth.signInWithOtp({ email })
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+    })
     if (!error) setMagicLinkSent(true)
   }
 
