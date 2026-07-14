@@ -1,36 +1,77 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Invoice App
 
-## Getting Started
+Magic link ile giriş yapılan, Supabase üzerinden kimlik doğrulanan ve
+oluşturulan faturaları PDF olarak müşteriye e-posta ile gönderen bir
+Next.js uygulaması.
 
-First, run the development server:
+## Özellikler
+
+- **Kimlik doğrulama:** Supabase Auth ile şifresiz (magic link) giriş.
+  Giriş linki `app/auth/callback/route.ts` üzerinden oturuma çevrilir.
+- **Fatura oluşturma:** `app/page.tsx` üzerindeki formla müşteri bilgisi
+  ve kalemler girilir.
+- **PDF üretimi:** `pdf-lib` ile sunucu tarafında fatura PDF'i oluşturulur
+  (`app/api/generate-invoice/route.ts`). Türkçe karaktere özgü `ş, ğ, ı, İ`
+  gibi harfler, standart WinAnsi fontunda desteklenmediği için Latin
+  karşılıklarına çevrilir.
+- **E-posta gönderimi:** Oluşturulan PDF, `resend` üzerinden müşteriye
+  ek olarak gönderilir.
+- **Kayıt:** Her fatura, ilgili kullanıcıya bağlı olarak Supabase
+  `invoices` tablosuna kaydedilir.
+
+## Başlarken
+
+Bağımlılıkları kurun:
+
+```bash
+npm install
+```
+
+Ortam değişkenlerini tanımlayın (`.env.local`):
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+RESEND_API_KEY=
+INVOICE_FROM_EMAIL=
+```
+
+Supabase projenizin **Authentication → URL Configuration** kısmına,
+magic link'lerin dönebileceği redirect URL'i eklemeyi unutmayın
+(örn. `http://localhost:3000/auth/callback` ve prod domain'iniz).
+
+Geliştirme sunucusunu başlatın:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+[http://localhost:3000](http://localhost:3000) adresini açarak sonucu görebilirsiniz.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Proje yapısı
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+app/
+  page.tsx                    → Giriş formu ve fatura oluşturma arayüzü
+  auth/callback/route.ts      → Magic link kodu için oturum değişimi
+  api/generate-invoice/route.ts → PDF oluşturma, e-posta gönderme, kayıt
+lib/
+  supabase-client.ts          → Tarayıcı tarafı Supabase client
+  supabase-server.ts          → Sunucu tarafı Supabase client (cookie tabanlı)
+  supabase-admin.ts           → Service role ile admin Supabase client
+```
 
-## Learn More
+## Kullanılan başlıca paketler
 
-To learn more about Next.js, take a look at the following resources:
+- [Next.js](https://nextjs.org)
+- [@supabase/ssr](https://supabase.com/docs/guides/auth/server-side) / [@supabase/supabase-js](https://supabase.com/docs/reference/javascript)
+- [pdf-lib](https://pdf-lib.js.org/) — PDF oluşturma
+- [resend](https://resend.com/) — e-posta gönderimi
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Dağıtım
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Vercel üzerinden dağıtırken yukarıdaki ortam değişkenlerinin proje
+ayarlarına eklendiğinden ve Supabase redirect URL listesinin prod
+domain'i içerdiğinden emin olun. Detaylar için
+[Next.js deployment dokümantasyonu](https://nextjs.org/docs/app/building-your-application/deploying).
