@@ -3,7 +3,7 @@ import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
 import { Resend } from 'resend'
 import { createAdminClient } from '@/lib/supabase-admin'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+
 
 type InvoiceItem = {
   description: string
@@ -12,6 +12,7 @@ type InvoiceItem = {
 }
 
 export async function POST(req: NextRequest) {
+  const resend = new Resend(process.env.RESEND_API_KEY)
   try {
     // 1) Kullanıcıyı doğrula (Authorization header'daki token'dan)
     const authHeader = req.headers.get('Authorization')
